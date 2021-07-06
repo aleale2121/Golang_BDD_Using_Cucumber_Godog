@@ -1,21 +1,41 @@
 package main
 
-import "github.com/cucumber/godog"
+import (
+	"fmt"
 
-func iEat(arg1 int) error {
-	return godog.ErrPending
+	"github.com/cucumber/godog"
+)
+
+func thereAreGodogs(available int) error {
+	Godogs = available
+	return nil
 }
 
-func thereAreGodogs(arg1 int) error {
-	return godog.ErrPending
+func iEat(num int) error {
+	if Godogs < num {
+		return fmt.Errorf("you cannot eat %d godogs, there are %d available", num, Godogs)
+	}
+	Godogs -= num
+	return nil
 }
 
-func thereShouldBeRemaining(arg1 int) error {
-	return godog.ErrPending
+func thereShouldBeRemaining(remaining int) error {
+	if Godogs != remaining {
+		return fmt.Errorf("expected %d godogs to be remaining, but there is %d", remaining, Godogs)
+	}
+	return nil
+}
+
+func InitializeTestSuite(ctx *godog.TestSuiteContext) {
+	ctx.BeforeSuite(func() { Godogs = 0 })
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	ctx.Step(`^I eat (\d+)$`, iEat)
+	ctx.BeforeScenario(func(*godog.Scenario) {
+		Godogs = 0 // clean the state before every scenario
+	})
+
 	ctx.Step(`^there are (\d+) godogs$`, thereAreGodogs)
+	ctx.Step(`^I eat (\d+)$`, iEat)
 	ctx.Step(`^there should be (\d+) remaining$`, thereShouldBeRemaining)
 }
